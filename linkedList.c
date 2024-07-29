@@ -104,6 +104,24 @@ void makeLinkedListIncreasingManner(int value, struct Node** head_ref){
     
 }
 
+int member(int value, struct node* head){
+    struct Node* current_node = head;
+    if(current_node->data == value){
+        return current_node->data;
+    }else{
+        while(current_node->next != NULL && current_node->next->data != value){
+            current_node = current_node->next;
+        }
+
+        if(current_node->next == NULL){
+            return -1;
+        }else{
+            return current_node->next->data;
+        }
+
+    }
+}
+
 
 int main(){
     struct Node* head = NULL;
@@ -149,6 +167,10 @@ int main(){
     // makeLinkedListIncreasingManner(9, &head);
     // makeLinkedListIncreasingManner(10, &head);
     //deleteNode(&head, 10);
+
+    int result = member(10, head);
+    if(result == -1){
+        printf("Not Found\n");
     
 
     struct Node* temp = head;
