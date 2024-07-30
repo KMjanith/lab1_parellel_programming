@@ -1,1 +1,1 @@
-gcc -o linkedlist_program main.c -lpthread
+gcc -o linkedlist_program part_c_second.c -lpthread

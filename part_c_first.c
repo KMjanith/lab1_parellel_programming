@@ -5,9 +5,9 @@
 #include <unistd.h>
 
 #define MAX_VALUE 65535 
-#define NUM_OPERATIONS 100 
-#define INITIAL_LIST_SIZE 20 
-#define NUM_THREADS 10 
+#define NUM_OPERATIONS 1000 
+#define INITIAL_LIST_SIZE 1000
+#define NUM_THREADS 4
 
 // Global variables
 struct Node* head = NULL;
@@ -166,8 +166,10 @@ int main() {
     // Start measuring time
     clock_t start_time = clock();
 
+    int NUM_OPERATIONS_Per_Thread = NUM_OPERATIONS / NUM_THREADS;
+
     // Prepare operation counts for each thread
-    int operation_counts[3] = {NUM_OPERATIONS / 3, NUM_OPERATIONS / 3, NUM_OPERATIONS / 3}; // m values
+    int operation_counts[3] = {NUM_OPERATIONS_Per_Thread / 3, NUM_OPERATIONS_Per_Thread / 3, NUM_OPERATIONS_Per_Thread / 3}; // m values
 
     for (int i = 0; i < NUM_THREADS; ++i) {
         printf("Creating thread %d\n", i);
