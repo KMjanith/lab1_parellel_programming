@@ -76,8 +76,8 @@ void deleteNode(struct Node** head_ref, int valueToDelete, pthread_rwlock_t* loc
 }
 
 // Check if a value exists in the linked list
-int member(struct Node** head, int value, pthread_rwlock_t* lock) {
-    pthread_rwlock_rdlock(lock); // Acquire read lock
+int member(struct Node** head, int value) {
+    
 
     struct Node* current_node = *head;
     while (current_node != NULL && current_node->data < value) {
@@ -86,7 +86,7 @@ int member(struct Node** head, int value, pthread_rwlock_t* lock) {
 
     int result = (current_node != NULL && current_node->data == value) ? 1 : 0;
 
-    pthread_rwlock_unlock(lock); // Release read lock
+    
     return result;
 }
 
@@ -120,7 +120,7 @@ void* perform_operations(void* arg) {
 
             case 1: // Delete operation
                 value = rand() % (MAX_VALUE + 1); // Generate a random value
-                if (member(&head, value, &rwlock)) {
+                if (member(&head, value)) {
                     deleteNode(&head, value, &rwlock);
                     printf("Thread %ld deleted %d\n", pthread_self(), value);
                 } else {
@@ -130,7 +130,7 @@ void* perform_operations(void* arg) {
 
             case 2: // Member check operation
                 value = rand() % (MAX_VALUE + 1); // Generate a random value
-                if (member(&head, value, &rwlock)) {
+                if (member(&head, value)) {
                     printf("Thread %ld found value %d in list.\n", pthread_self(), value);
                 } else {
                     printf("Thread %ld did not find value %d in list.\n", pthread_self(), value);
