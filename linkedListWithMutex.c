@@ -195,7 +195,6 @@ void *threadOperation(void* thread_data){
 int member(int value) {
     pthread_mutex_lock(&mutex);
     struct Node* current = head;
-    printf("Thread %ld: Member %d\n", pthread_self(), value);
 
     while (current != NULL) {
         if (current->data == value) {
@@ -214,7 +213,6 @@ void insert(int value){
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
     struct Node* new_node = malloc(sizeof(struct Node));
     pthread_mutex_lock(&mutex);
-    printf("Thread %ld: Insert %d\n", pthread_self(), value);
     new_node->data = value;
     new_node->next = head;
     head = new_node;
@@ -224,7 +222,6 @@ void insert(int value){
 void delete(int value) {
     pthread_mutex_lock(&mutex);
     struct Node* current = head;
-    printf("Thread %ld: Delete %d\n", pthread_self(), value);
     if (current == NULL) { // Empty list
         pthread_mutex_unlock(&mutex);
         return;
