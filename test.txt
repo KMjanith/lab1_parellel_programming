@@ -1,0 +1,1 @@
+gcc -o linkedlist_program main.c -lpthread
