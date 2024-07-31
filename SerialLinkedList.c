@@ -106,8 +106,6 @@ int main(int argc, char* arg[]){
     
     required_samples = calculate_required_samples(stddev, mean, z, error);   /*calculate the required samples to get the desired confidence accuracy*/
     
-    printf("Mean execution time: %f seconds\n", mean);
-    printf("Standard deviation: %f seconds\n", stddev);
     printf("Required number of samples: %f\n", required_samples);
     printf("runnning the programme with the required number of samples...\n\n");
 

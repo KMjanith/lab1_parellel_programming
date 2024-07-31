@@ -256,7 +256,6 @@ int member(int value) {
 
 void insert(int value){
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
-    printf("Inserting %d\n", value);
     struct Node* new_node = malloc(sizeof(struct Node));
     pthread_mutex_lock(&mutex);
     new_node->data = value;
@@ -266,7 +265,6 @@ void insert(int value){
 }
 
 void delete(int value) {
-    printf("Deleting %d\n", value);
     struct Node* current = head;
     pthread_mutex_lock(&mutex);
     if (current == NULL) { // Empty list
