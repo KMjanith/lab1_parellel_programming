@@ -17,12 +17,12 @@ struct Node {
 struct Node* head = NULL;
 pthread_rwlock_t rwlock; // Read-write lock
 pthread_t* threads; // Array to hold thread IDs
-int* used; // Track used values
-int total_operations; // Total number of operations for all threads
+int* used; 
+int total_operations; 
 
 // Insert a value into the linked list
 void insert(struct Node** head, int value, pthread_rwlock_t* lock) {
-    pthread_rwlock_wrlock(lock); // Acquire write lock
+    pthread_rwlock_wrlock(lock); 
 
     struct Node* current_node = *head;
     struct Node* previous_node = NULL;
@@ -30,13 +30,11 @@ void insert(struct Node** head, int value, pthread_rwlock_t* lock) {
     new_node->data = value;
     new_node->next = NULL;
 
-    // Find the correct position to insert the new node
     while (current_node != NULL && current_node->data < value) {
         previous_node = current_node;
         current_node = current_node->next;
     }
 
-    // Insert at the head
     if (previous_node == NULL) {
         new_node->next = *head;
         *head = new_node;
@@ -45,12 +43,12 @@ void insert(struct Node** head, int value, pthread_rwlock_t* lock) {
         previous_node->next = new_node;
     }
 
-    pthread_rwlock_unlock(lock); // Release write lock
+    pthread_rwlock_unlock(lock); 
 }
 
 // Delete a node from the linked list
 void deleteNode(struct Node** head_ref, int valueToDelete, pthread_rwlock_t* lock) {
-    pthread_rwlock_wrlock(lock); // Acquire write lock
+    pthread_rwlock_wrlock(lock); 
 
     struct Node* current_node = *head_ref;
     struct Node* previous_node = NULL;
@@ -60,20 +58,19 @@ void deleteNode(struct Node** head_ref, int valueToDelete, pthread_rwlock_t* loc
         current_node = current_node->next;
     }
 
-    // Node to delete found
     if (current_node != NULL && current_node->data == valueToDelete) {
         if (previous_node == NULL) {
             *head_ref = current_node->next; // Delete head
         } else {
-            previous_node->next = current_node->next; // Bypass the current node
+            previous_node->next = current_node->next; 
         }
         free(current_node);
     }
 
-    pthread_rwlock_unlock(lock); // Release write lock
+    pthread_rwlock_unlock(lock); 
 }
 
-// Check if a value exists in the linked list
+// Check if a value exists in the linked list-> no R&D lock
 int member(struct Node** head, int value) {
     struct Node* current_node = *head;
     while (current_node != NULL && current_node->data < value) {
@@ -88,15 +85,15 @@ int generate_unique_random() {
     int num;
     do {
         num = rand() % (MAX_VALUE + 1);
-    } while (used[num]); // Repeat until a unique number is found
+    } while (used[num]); 
 
-    used[num] = 1; // Mark this number as used
+    used[num] = 1; 
     return num;
 }
 
 // Function for each thread to perform operations
 void* perform_operations(void* arg) {
-    int total_operations_per_thread = *(int*)arg; // Get the number of operations for this thread
+    int total_operations_per_thread = *(int*)arg; 
 
     for (int i = 0; i < total_operations_per_thread; ++i) {
         int operation = rand() % 3; // Randomly choose an operation (0: insert, 1: delete, 2: member)
@@ -104,19 +101,19 @@ void* perform_operations(void* arg) {
 
         switch (operation) {
             case 0: // Insert operation
-                value = generate_unique_random(); // Generate a unique random value
+                value = generate_unique_random(); 
                 insert(&head, value, &rwlock);
                 break;
 
             case 1: // Delete operation
-                value = rand() % (MAX_VALUE + 1); // Generate a random value
+                value = rand() % (MAX_VALUE + 1); 
                 if (member(&head, value)) {
                     deleteNode(&head, value, &rwlock);
                 }
                 break;
 
             case 2: // Member check operation
-                value = rand() % (MAX_VALUE + 1); // Generate a random value
+                value = rand() % (MAX_VALUE + 1); 
                 member(&head, value);
                 break;
         }
@@ -166,7 +163,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    srand(time(NULL)); // Seed the random number generator
+    srand(time(NULL)); 
 
     // Initialize the linked list with unique random values
     used = (int*)calloc(MAX_VALUE + 1, sizeof(int)); // Track used values
@@ -197,21 +194,20 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // Wait for all threads to finish
         for (int i = 0; i < n; ++i) {
             pthread_join(threads[i], NULL);
         }
 
         // End timing
         clock_t end_time = clock();
-        execution_times[iteration] = (double)(end_time - start_time) / CLOCKS_PER_SEC; // Store the time taken
+        execution_times[iteration] = (double)(end_time - start_time) / CLOCKS_PER_SEC; 
     }
 
     // Clean up resources after all iterations
-    pthread_rwlock_destroy(&rwlock); // Destroy the read-write lock
-    free(used); // Free the used values array
-    free(threads); // Free the thread IDs
-    while (head != NULL) { // Free the linked list memory
+    pthread_rwlock_destroy(&rwlock); 
+    free(used); 
+    free(threads); 
+    while (head != NULL) { 
         struct Node* to_delete = head;
         head = head->next;
         free(to_delete);

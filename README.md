@@ -18,3 +18,8 @@ gcc -o fileName <fileName.c> -lpthread
 * we ran the m operations 100 times.
 * then collected the mean, standard deviation and the sample size
 * then ran the m operations equals to that sample size and collected the data and calculated the mean and the standard deviation for specific thread counts.
+
+# to compile linkedListWthR&D
+gcc -o linkedListIwthR&WLock linkedListIwthR&WLock.c -lpthread -lm
+
+./linkedListIwthR&WLock 1000 1000 0.5 0.3 0.2

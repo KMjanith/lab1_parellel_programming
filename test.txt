@@ -1,7 +1,0 @@
-gcc -o linkedlist_program part_c_second.c -lpthread
-
-threan_c n m mem_f intert_f delete_f
-
-gcc -o ll part_c_third.c -lpthread -lm
-
-./ll 1000 1000 0.5 0.3 0.2
