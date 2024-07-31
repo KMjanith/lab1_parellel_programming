@@ -1,5 +1,7 @@
 ﻿# lab1_parellel_programming
 
+this repo containes the codes for insert, delete and member function for a simple liked list using parellel programming.we have used pthreads for thread executions and you can see the logics we have used by diving into the code.
+
 ## to compile the code 
 ```
 gcc <filaName.c>
@@ -19,7 +21,34 @@ gcc -o fileName <fileName.c> -lpthread
 * then collected the mean, standard deviation and the sample size
 * then ran the m operations equals to that sample size and collected the data and calculated the mean and the standard deviation for specific thread counts.
 
-# to compile linkedListWthR&D
-gcc -o linkedListIWithRandWLock linkedListIWithRandWLock.c -lpthread -lm
-
+# sample codes for compilation and run the program
+## for(n=1000,m=10000,member_fraction=0.99,insert_fraction=0.005,delete_fraction=0.005)
+### Serial linkedlist
+* for compile
+```
+gcc -o serial SerialLinkedList.c -lpthread
+```
+* to run
+```
+serial 1 1000 10000 0.99 0.005 0.005
+```
+### Linked List with Mutex
+* for compile
+```
+gcc -o mutexLinkedList linkedListWithMutex.c -lpthread
+```
+* to run
+```
+mutexLinkedList 4 1000 10000 0.99 0.005 0.005
+```
+### Linked List with RW lock
+* for compile
+```
+gcc -o linkedListWithRandWLock linkedListWithRandWLock.c -lpthread -lm
+```
+* to run
+```
+linkedListWithRandWLock 4 1000 1000 0.5 0.3 0.2
+```
+``
 ./linkedListIWithRandWLock 1000 1000 0.5 0.3 0.2
