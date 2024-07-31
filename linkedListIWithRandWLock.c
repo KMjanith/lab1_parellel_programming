@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <math.h>
 
-#define MAX_VALUE 65535 
+#define MAX_VALUE 65535
 
 // Node structure for linked list
 struct Node {
@@ -18,7 +18,7 @@ struct Node* head = NULL;
 pthread_rwlock_t rwlock; // Read-write lock
 pthread_t* threads; // Array to hold thread IDs
 int* used; 
-int total_operations; 
+int total_operations;
 
 // Insert a value into the linked list
 void insert(struct Node** head, int value, pthread_rwlock_t* lock) {
@@ -70,7 +70,7 @@ void deleteNode(struct Node** head_ref, int valueToDelete, pthread_rwlock_t* loc
     pthread_rwlock_unlock(lock); 
 }
 
-// Check if a value exists in the linked list-> no R&D lock
+// Check if a value exists in the linked list
 int member(struct Node** head, int value) {
     struct Node* current_node = *head;
     while (current_node != NULL && current_node->data < value) {
@@ -151,6 +151,8 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    int number_of_threads = 4;
+
     int n = atoi(argv[1]); // Number of threads
     total_operations = atoi(argv[2]); // Total number of operations for all threads
     float m_member_fraction = atof(argv[3]);
@@ -167,7 +169,7 @@ int main(int argc, char *argv[]) {
 
     // Initialize the linked list with unique random values
     used = (int*)calloc(MAX_VALUE + 1, sizeof(int)); // Track used values
-    threads = malloc(sizeof(pthread_t) * n); // Allocate memory for thread IDs
+    threads = malloc(sizeof(pthread_t) * number_of_threads); // Allocate memory for thread IDs
     for (int i = 0; i < n; ++i) {
         insert(&head, generate_unique_random(), &rwlock);
     }
@@ -187,30 +189,20 @@ int main(int argc, char *argv[]) {
         clock_t start_time = clock();
 
         // Create threads for this iteration
-        for (int i = 0; i < n; ++i) {
+        for (int i = 0; i < number_of_threads; ++i) {
             if (pthread_create(&threads[i], NULL, perform_operations, &total_operations_per_thread) != 0) {
                 perror("Failed to create thread");
                 return EXIT_FAILURE; // Handle thread creation error
             }
         }
 
-        for (int i = 0; i < n; ++i) {
+        for (int i = 0; i < number_of_threads; ++i) {
             pthread_join(threads[i], NULL);
         }
 
         // End timing
         clock_t end_time = clock();
         execution_times[iteration] = (double)(end_time - start_time) / CLOCKS_PER_SEC; 
-    }
-
-    // Clean up resources after all iterations
-    pthread_rwlock_destroy(&rwlock); 
-    free(used); 
-    free(threads); 
-    while (head != NULL) { 
-        struct Node* to_delete = head;
-        head = head->next;
-        free(to_delete);
     }
 
     // Calculate mean execution time, standard deviation, and required samples
@@ -221,12 +213,56 @@ int main(int argc, char *argv[]) {
     double required_samples = calculate_required_samples(stddev, mean, z, error);
 
     // Print execution statistics
-    printf("Mean execution time: %f seconds\n", mean);
-    printf("Standard deviation: %f seconds\n", stddev);
+    // printf("Mean execution time: %f seconds\n", mean);
+    // printf("Standard deviation: %f seconds\n", stddev);
     printf("Required number of samples: %f\n", required_samples);
 
     // Free the execution times array
     free(execution_times);
+
+    // Allocate memory for realExecutionTimes dynamically
+    double* realExecutionTimes = (double*)malloc((int)required_samples * sizeof(double));
+    if (realExecutionTimes == NULL) {
+        perror("Failed to allocate memory for realExecutionTimes");
+        return EXIT_FAILURE;
+    }
+
+    for (int i = 0; i < (int)required_samples; i++) {
+        clock_t start = clock();
+        
+        // Create the threads
+        for (int j = 0; j < number_of_threads; j++) {
+            if (pthread_create(&threads[j], NULL, perform_operations, &total_operations_per_thread) != 0) {
+                perror("Failed to create thread");
+                return EXIT_FAILURE; // Handle thread creation error
+            }
+        }
+
+        // Join the threads
+        for (int j = 0; j < number_of_threads; j++) {
+            pthread_join(threads[j], NULL);
+        }
+
+        clock_t end = clock();
+        realExecutionTimes[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
+    }
+
+    mean = calculate_mean(realExecutionTimes, (int)required_samples);
+    stddev = calculate_standard_deviation(realExecutionTimes, (int)required_samples, mean);
+    printf("Mean execution time: %f seconds, std: %f for samples: %d\n", mean, stddev, (int)required_samples);
+
+    // Free the realExecutionTimes array
+    free(realExecutionTimes);
+
+    // Clean up resources after all iterations
+    pthread_rwlock_destroy(&rwlock); 
+    free(used); 
+    free(threads); 
+    while (head != NULL) { 
+        struct Node* to_delete = head;
+        head = head->next;
+        free(to_delete);
+    }
 
     return 0;
 }
