@@ -63,8 +63,8 @@ int main(int argc, char* arg[]){
     int repetitions = 100; // initial number of repetitions
     double execution_times[repetitions];  /*list ti store the execution times*/
     double total_time, mean, stddev, required_samples;   /*variables to calculate the stats*/
-   
 
+    
     /*generate unique values*/
     int* unique_values = malloc(n * sizeof(int));
     generate_unique_values(unique_values, n);
@@ -94,6 +94,8 @@ int main(int argc, char* arg[]){
         exit(EXIT_FAILURE);
     }
 
+    printf("Running the programme with %d threads and %d times to calculate sample size...\n\n", thread_count, repetitions);
+
     for (int i = 0; i < repetitions; i++) {
         clock_t start = clock();
         
@@ -118,14 +120,6 @@ int main(int argc, char* arg[]){
     // printf("Final Linked List:\n");
     // printLinkedList();
 
-    /*free the memory*/
-    free(thread_list);
-    free(thread_data);
-    free(unique_values);
-
-    /*destroy the mutex*/
-    pthread_mutex_destroy(&mutex);
-
     mean = calculate_mean(execution_times, repetitions);   /*calculate the mean of the ran 100 execution*/
     stddev = calculate_standard_deviation(execution_times, repetitions, mean);   /*calculate standard deviation of the samples*/
     
@@ -137,6 +131,46 @@ int main(int argc, char* arg[]){
     printf("Mean execution time: %f seconds\n", mean);
     printf("Standard deviation: %f seconds\n", stddev);
     printf("Required number of samples: %f\n", required_samples);
+    printf("runnning the programme with the required number of samples...\n\n");
+
+    double realExecutionTimes[(int)required_samples];
+
+    for(int i = 0; i < required_samples; i++){
+        clock_t start = clock();
+        
+        /*create the threads*/
+        for(int i = 0; i < thread_count; i++){
+            thread_data[i].thread_id = i;
+            thread_data[i].operations = operations;
+            thread_data[i].m = m;
+            pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+        }
+
+        /*join the threads*/
+        for(int i = 0; i < thread_count; i++){
+            pthread_join(thread_list[i], NULL);
+        }
+
+        clock_t end = clock();
+        realExecutionTimes[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    }
+
+    mean = calculate_mean(realExecutionTimes, required_samples);   /*calculate the mean of the ran 100 execution*/
+    stddev = calculate_standard_deviation(realExecutionTimes, required_samples, mean);   /*calculate standard deviation of the samples*/
+    printf("Mean execution time: %f seconds, std: %f for samples: %d", mean,stddev, (int)required_samples);
+    
+
+    /*free the memory*/
+    free(thread_list);
+    free(thread_data);
+    free(unique_values);
+    
+
+    /*destroy the mutex*/
+    pthread_mutex_destroy(&mutex);
+
+    
 
     return 0;
 
@@ -207,27 +241,21 @@ void *threadOperation(void* thread_data){
         }else{
             delete(random_value);
         }
-
     }
-
 }
 
 int member(int value) {
-    pthread_mutex_lock(&mutex);
     struct Node* current = head;
 
     while (current != NULL) {
         if (current->data == value) {
-            pthread_mutex_unlock(&mutex);
             return 1;
         }
         current = current->next;
     }
 
-    pthread_mutex_unlock(&mutex);
     return 0;
 }
-
 
 void insert(int value){
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
