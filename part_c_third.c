@@ -1,0 +1,236 @@
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include <math.h>
+
+#define MAX_VALUE 65535 
+
+// Node structure for linked list
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+// Global variables
+struct Node* head = NULL;
+pthread_rwlock_t rwlock; // Read-write lock
+pthread_t* threads; // Array to hold thread IDs
+int* used; // Track used values
+int total_operations; // Total number of operations for all threads
+
+// Insert a value into the linked list
+void insert(struct Node** head, int value, pthread_rwlock_t* lock) {
+    pthread_rwlock_wrlock(lock); // Acquire write lock
+
+    struct Node* current_node = *head;
+    struct Node* previous_node = NULL;
+    struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
+    new_node->data = value;
+    new_node->next = NULL;
+
+    // Find the correct position to insert the new node
+    while (current_node != NULL && current_node->data < value) {
+        previous_node = current_node;
+        current_node = current_node->next;
+    }
+
+    // Insert at the head
+    if (previous_node == NULL) {
+        new_node->next = *head;
+        *head = new_node;
+    } else {
+        new_node->next = current_node;
+        previous_node->next = new_node;
+    }
+
+    pthread_rwlock_unlock(lock); // Release write lock
+}
+
+// Delete a node from the linked list
+void deleteNode(struct Node** head_ref, int valueToDelete, pthread_rwlock_t* lock) {
+    pthread_rwlock_wrlock(lock); // Acquire write lock
+
+    struct Node* current_node = *head_ref;
+    struct Node* previous_node = NULL;
+
+    while (current_node != NULL && current_node->data < valueToDelete) {
+        previous_node = current_node;
+        current_node = current_node->next;
+    }
+
+    // Node to delete found
+    if (current_node != NULL && current_node->data == valueToDelete) {
+        if (previous_node == NULL) {
+            *head_ref = current_node->next; // Delete head
+        } else {
+            previous_node->next = current_node->next; // Bypass the current node
+        }
+        free(current_node);
+    }
+
+    pthread_rwlock_unlock(lock); // Release write lock
+}
+
+// Check if a value exists in the linked list
+int member(struct Node** head, int value) {
+    struct Node* current_node = *head;
+    while (current_node != NULL && current_node->data < value) {
+        current_node = current_node->next;
+    }
+
+    return (current_node != NULL && current_node->data == value) ? 1 : 0;
+}
+
+// Generate a unique random number
+int generate_unique_random() {
+    int num;
+    do {
+        num = rand() % (MAX_VALUE + 1);
+    } while (used[num]); // Repeat until a unique number is found
+
+    used[num] = 1; // Mark this number as used
+    return num;
+}
+
+// Function for each thread to perform operations
+void* perform_operations(void* arg) {
+    int total_operations_per_thread = *(int*)arg; // Get the number of operations for this thread
+
+    for (int i = 0; i < total_operations_per_thread; ++i) {
+        int operation = rand() % 3; // Randomly choose an operation (0: insert, 1: delete, 2: member)
+        int value;
+
+        switch (operation) {
+            case 0: // Insert operation
+                value = generate_unique_random(); // Generate a unique random value
+                insert(&head, value, &rwlock);
+                break;
+
+            case 1: // Delete operation
+                value = rand() % (MAX_VALUE + 1); // Generate a random value
+                if (member(&head, value)) {
+                    deleteNode(&head, value, &rwlock);
+                }
+                break;
+
+            case 2: // Member check operation
+                value = rand() % (MAX_VALUE + 1); // Generate a random value
+                member(&head, value);
+                break;
+        }
+    }
+
+    return NULL;
+}
+
+// Calculate the mean of an array
+double calculate_mean(double* values, int size) {
+    double sum = 0.0;
+    for (int i = 0; i < size; i++) {
+        sum += values[i];
+    }
+    return sum / size;
+}
+
+// Calculate the standard deviation of an array
+double calculate_standard_deviation(double* values, int size, double mean) {
+    double sum = 0.0;
+    for (int i = 0; i < size; i++) {
+        sum += pow(values[i] - mean, 2);
+    }
+    return sqrt(sum / size);
+}
+
+// Calculate the required number of samples
+double calculate_required_samples(double stddev, double mean, double z, double error) {
+    return pow((z * stddev) / error, 2);
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 6) {
+        fprintf(stderr, "Usage: %s <n> <m> <m_member_fraction> <m_delete_fraction> <m_insert_fraction>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    int n = atoi(argv[1]); // Number of threads
+    total_operations = atoi(argv[2]); // Total number of operations for all threads
+    float m_member_fraction = atof(argv[3]);
+    float m_delete_fraction = atof(argv[4]);
+    float m_insert_fraction = atof(argv[5]);
+
+    // Validate input fractions
+    if (m_member_fraction + m_delete_fraction + m_insert_fraction != 1.0) {
+        fprintf(stderr, "Fractions must sum to 1.0\n");
+        return EXIT_FAILURE;
+    }
+
+    srand(time(NULL)); // Seed the random number generator
+
+    // Initialize the linked list with unique random values
+    used = (int*)calloc(MAX_VALUE + 1, sizeof(int)); // Track used values
+    threads = malloc(sizeof(pthread_t) * n); // Allocate memory for thread IDs
+    for (int i = 0; i < n; ++i) {
+        insert(&head, generate_unique_random(), &rwlock);
+    }
+
+    // Initialize the read-write lock
+    pthread_rwlock_init(&rwlock, NULL);
+
+    int num_iterations = 100; // Number of times to run the operations
+    double* execution_times = malloc(num_iterations * sizeof(double)); // Array to store execution times
+
+    // Calculate the number of operations each thread will perform
+    int total_operations_per_thread = total_operations / n;
+
+    // Perform multiple iterations
+    for (int iteration = 0; iteration < num_iterations; iteration++) {
+        // Start measuring time
+        clock_t start_time = clock();
+
+        // Create threads for this iteration
+        for (int i = 0; i < n; ++i) {
+            if (pthread_create(&threads[i], NULL, perform_operations, &total_operations_per_thread) != 0) {
+                perror("Failed to create thread");
+                return EXIT_FAILURE; // Handle thread creation error
+            }
+        }
+
+        // Wait for all threads to finish
+        for (int i = 0; i < n; ++i) {
+            pthread_join(threads[i], NULL);
+        }
+
+        // End timing
+        clock_t end_time = clock();
+        execution_times[iteration] = (double)(end_time - start_time) / CLOCKS_PER_SEC; // Store the time taken
+    }
+
+    // Clean up resources after all iterations
+    pthread_rwlock_destroy(&rwlock); // Destroy the read-write lock
+    free(used); // Free the used values array
+    free(threads); // Free the thread IDs
+    while (head != NULL) { // Free the linked list memory
+        struct Node* to_delete = head;
+        head = head->next;
+        free(to_delete);
+    }
+
+    // Calculate mean execution time, standard deviation, and required samples
+    double mean = calculate_mean(execution_times, num_iterations);
+    double stddev = calculate_standard_deviation(execution_times, num_iterations, mean);
+    double z = 1.960; // 95% confidence level
+    double error = 0.05 * mean; // Desired accuracy in seconds
+    double required_samples = calculate_required_samples(stddev, mean, z, error);
+
+    // Print execution statistics
+    printf("Mean execution time: %f seconds\n", mean);
+    printf("Standard deviation: %f seconds\n", stddev);
+    printf("Required number of samples: %f\n", required_samples);
+
+    // Free the execution times array
+    free(execution_times);
+
+    return 0;
+}
