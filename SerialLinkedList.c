@@ -1,28 +1,20 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>  // For boolean values
-#include <pthread.h>
 #include <time.h>
 #include <math.h>
 
 #define MAX_VALUE 65536  // Range of random values
 
-struct Node {
+struct Node{
     int data;
     struct Node* next;
-};
-
-struct ThreadData{
-    long thread_id;
-    char* operations;
-    long m;
-};
+};  
 
 void generate_unique_values(int* values, int n);
 void createInitialLinkedList(int* values, int n);
 void createOperationList(char* operations,int m, float m_insert,float m_delete,float m_member);
 void shuffleOperations(char* operations, int m);
-void *threadOperation(void* thread_data);
 int member(int value);
 void insert(int value);
 void delete(int value);
@@ -32,7 +24,6 @@ double calculate_required_samples(double stddev, double mean, double z, double e
 
 struct Node* head = NULL;  /*making the initial linked list*/
 int thread_count;        /*variable to store the thread count from the command line*/
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  /*mutex variable*/
 int n; /*number of nodes in the linked list*/
 int m; /*number of operations to perform*/
 float m_insert;
@@ -50,8 +41,6 @@ void printLinkedList() {
 }
 
 int main(int argc, char* arg[]){
-    pthread_t *thread_list; /*array pointer of pthreads*/
-
     /*get the number of threads from the command line*/
     thread_count = strtol(arg[1], NULL, 10);
     n = strtol(arg[2], NULL, 10); /*items to linked list*/
@@ -64,7 +53,6 @@ int main(int argc, char* arg[]){
     double execution_times[repetitions];  /*list ti store the execution times*/
     double total_time, mean, stddev, required_samples;   /*variables to calculate the stats*/
 
-    
     /*generate unique values*/
     int* unique_values = malloc(n * sizeof(int));
     generate_unique_values(unique_values, n);
@@ -82,36 +70,26 @@ int main(int argc, char* arg[]){
 
     /*shuffling the operations*/
     shuffleOperations(operations, m);
-    
-    /*allocate memory for the array of pthreads*/
-    thread_list = malloc(thread_count * sizeof(pthread_t));
-    /*allocate memory for ThreadDataList*/
-    struct ThreadData* thread_data = malloc(thread_count * sizeof(struct ThreadData));
-
-    /*initialize the mutex*/
-    if(pthread_mutex_init(&mutex, NULL) != 0){
-        fprintf(stderr, "Error initializing mutex\n");
-        exit(EXIT_FAILURE);
-    }
 
     printf("Running the programme with %d threads and %d times to calculate sample size...\n\n", thread_count, repetitions);
 
     for (int i = 0; i < repetitions; i++) {
         clock_t start = clock();
         
-        /*create the threads*/
-        for(int i = 0; i < thread_count; i++){
-            thread_data[i].thread_id = i;
-            thread_data[i].operations = operations;
-            thread_data[i].m = m;
-            pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+        for (int j = 0; j < m; j++) {
+            int value = rand() % MAX_VALUE;
+            switch (operations[j]) {
+                case 'I':
+                    insert(value);
+                    break;
+                case 'D':
+                    delete(value);
+                    break;
+                case 'M':
+                    member(value);
+                    break;
+            }
         }
-
-        /*join the threads*/
-        for(int i = 0; i < thread_count; i++){
-            pthread_join(thread_list[i], NULL);
-        }
-
 
         clock_t end = clock();
         execution_times[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
@@ -134,26 +112,27 @@ int main(int argc, char* arg[]){
     printf("runnning the programme with the required number of samples...\n\n");
 
     double realExecutionTimes[(int)required_samples];
-
-    for(int i = 0; i < required_samples; i++){
+   
+    for (int i = 0; i < required_samples; i++) {
         clock_t start = clock();
         
-        /*create the threads*/
-        for(int i = 0; i < thread_count; i++){
-            thread_data[i].thread_id = i;
-            thread_data[i].operations = operations;
-            thread_data[i].m = m;
-            pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
-        }
-
-        /*join the threads*/
-        for(int i = 0; i < thread_count; i++){
-            pthread_join(thread_list[i], NULL);
+        for (int j = 0; j < m; j++) {
+            int value = rand() % MAX_VALUE;
+            switch (operations[j]) {
+                case 'I':
+                    insert(value);
+                    break;
+                case 'D':
+                    delete(value);
+                    break;
+                case 'M':
+                    member(value);
+                    break;
+            }
         }
 
         clock_t end = clock();
         realExecutionTimes[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
-
     }
 
     mean = calculate_mean(realExecutionTimes, required_samples);   /*calculate the mean of the ran 100 execution*/
@@ -162,15 +141,12 @@ int main(int argc, char* arg[]){
     
 
     /*free the memory*/
-    free(thread_list);
-    free(thread_data);
+    free(execution_times);
+    free(realExecutionTimes);
     free(unique_values);
-    
-
-    /*destroy the mutex*/
-    pthread_mutex_destroy(&mutex);
 
     return 0;
+
 
 }
 
@@ -221,27 +197,6 @@ void shuffleOperations(char* operations, int m){
     }
 }
 
-void *threadOperation(void* thread_data){
-    struct ThreadData* data = (struct ThreadData*) thread_data;   
-    long my_rank = data->thread_id;
-    char* operations = data->operations;
-    long my_m = data->m;
-
-    int start = (m / thread_count) * my_rank;
-    int end = (m / thread_count) * (my_rank + 1);
-
-    for(int i = start; i<end;i++){
-        int random_value = rand() % MAX_VALUE;
-        if(operations[i] == 'M'){
-            member(random_value);
-        }else if(operations[i] == 'I'){
-            insert(random_value);
-        }else{
-            delete(random_value);
-        }
-    }
-}
-
 int member(int value) {
     struct Node* current = head;
 
@@ -258,25 +213,25 @@ int member(int value) {
 void insert(int value){
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
     struct Node* new_node = malloc(sizeof(struct Node));
-    pthread_mutex_lock(&mutex);
+  
     new_node->data = value;
     new_node->next = head;
     head = new_node;
-    pthread_mutex_unlock(&mutex);
+
 }
 
 void delete(int value) {
-    pthread_mutex_lock(&mutex);
+   
     struct Node* current = head;
     if (current == NULL) { // Empty list
-        pthread_mutex_unlock(&mutex);
+      
         return;
     }
 
     if (current->data == value) { // Delete the head
         head = current->next;
         free(current);
-        pthread_mutex_unlock(&mutex);
+        
         return;
     }
     struct Node* previous = current;
@@ -289,16 +244,15 @@ void delete(int value) {
 
     // If the node is not found
     if (current == NULL) {  
-        pthread_mutex_unlock(&mutex);
+        
         return;
     }
 
     previous->next = current->next;  // Delete the node
     free(current);
 
-    pthread_mutex_unlock(&mutex);
-
 }
+
 
 double calculate_mean(double* values, int size) {
     double sum = 0.0;
