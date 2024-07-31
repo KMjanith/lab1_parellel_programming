@@ -128,8 +128,6 @@ int main(int argc, char* arg[]){
     
     required_samples = calculate_required_samples(stddev, mean, z, error);   /*calculate the required samples to get the desired confidence accuracy*/
     
-    printf("Mean execution time: %f seconds\n", mean);
-    printf("Standard deviation: %f seconds\n", stddev);
     printf("Required number of samples: %f\n", required_samples);
     printf("runnning the programme with the required number of samples...\n\n");
 
@@ -243,20 +241,22 @@ void *threadOperation(void* thread_data){
 }
 
 int member(int value) {
+    
     struct Node* current = head;
-
+    
     while (current != NULL) {
         if (current->data == value) {
             return 1;
         }
         current = current->next;
     }
-
+ 
     return 0;
 }
 
 void insert(int value){
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
+    printf("Inserting %d\n", value);
     struct Node* new_node = malloc(sizeof(struct Node));
     pthread_mutex_lock(&mutex);
     new_node->data = value;
@@ -266,8 +266,9 @@ void insert(int value){
 }
 
 void delete(int value) {
-    pthread_mutex_lock(&mutex);
+    printf("Deleting %d\n", value);
     struct Node* current = head;
+    pthread_mutex_lock(&mutex);
     if (current == NULL) { // Empty list
         pthread_mutex_unlock(&mutex);
         return;

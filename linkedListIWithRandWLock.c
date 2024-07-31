@@ -146,21 +146,21 @@ double calculate_required_samples(double stddev, double mean, double z, double e
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 6) {
+    if (argc != 7) {
         fprintf(stderr, "Usage: %s <n> <m> <m_member_fraction> <m_delete_fraction> <m_insert_fraction>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
-    int number_of_threads = 4;
+    int number_of_threads = atoi(argv[1]); // Number of threads
 
-    int n = atoi(argv[1]); // Number of threads
-    total_operations = atoi(argv[2]); // Total number of operations for all threads
-    float m_member_fraction = atof(argv[3]);
-    float m_delete_fraction = atof(argv[4]);
-    float m_insert_fraction = atof(argv[5]);
+    int n = atoi(argv[2]); // Number of threads
+    total_operations = atoi(argv[3]); // Total number of operations for all threads
+    float m_member_fraction = atof(argv[4]);
+    float m_delete_fraction = atof(argv[5]);
+    float m_insert_fraction = atof(argv[6]);
 
     // Validate input fractions
-    if (m_member_fraction + m_delete_fraction + m_insert_fraction != 1.0) {
+    if ((int)(m_member_fraction + m_delete_fraction + m_insert_fraction) != 1) {
         fprintf(stderr, "Fractions must sum to 1.0\n");
         return EXIT_FAILURE;
     }
