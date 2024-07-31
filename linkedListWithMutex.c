@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>  // Add this line to include the bool data type
 #include <pthread.h>
+#include <time.h>
+#include <math.h>
 
 #define MAX_VALUE 65536  // Range of random values
 
@@ -24,6 +26,9 @@ void *threadOperation(void* thread_data);
 int member(int value);
 void insert(int value);
 void delete(int value);
+double calculate_mean(double* values, int size);
+double calculate_standard_deviation(double* values, int size, double mean);
+double calculate_required_samples(double stddev, double mean, double z, double error);
 
 struct Node* head = NULL;  /*making the initial linked list*/
 int thread_count;        /*variable to store the thread count from the command line*/
@@ -54,35 +59,30 @@ int main(int argc, char* arg[]){
     m_member = strtof(arg[4], NULL); /*number of member operations*/
     m_insert = strtof(arg[5], NULL); /*number of insert operations*/
     m_delete = strtof(arg[6], NULL); /*number of delete operations*/
+
+    int repetitions = 100; // initial number of repetitions
+    double execution_times[repetitions];  /*list ti store the execution times*/
+    double total_time, mean, stddev, required_samples;   /*variables to calculate the stats*/
    
 
     /*generate unique values*/
     int* unique_values = malloc(n * sizeof(int));
     generate_unique_values(unique_values, n);
-    // for(int i =0;i<n;i++){
-    //     printf("%d\n", unique_values[i]);
-    // }
 
     /*creating initial linked list*/
     createInitialLinkedList(unique_values,n);
-    printf("Initial Linked List:\n");
-    printLinkedList();
 
-    //printf("head data %d\n", head->data);
+
+    // printf("Initial Linked List:\n");
+    // printLinkedList();
 
     /*dividing operations*/
     char operations[m];
     createOperationList(operations, m, m_insert, m_delete, m_member);
-    // for(int i = 0; i < m; i++){
-    //     printf("%c\n", operations[i]);
-    // }
 
     /*shuffling the operations*/
     shuffleOperations(operations, m);
-    // for(int i = 0; i < m; i++){
-    //     printf("%c\n", operations[i]);
-    // }
-
+    
     /*allocate memory for the array of pthreads*/
     thread_list = malloc(thread_count * sizeof(pthread_t));
     /*allocate memory for ThreadDataList*/
@@ -94,21 +94,29 @@ int main(int argc, char* arg[]){
         exit(EXIT_FAILURE);
     }
 
-    /*create the threads*/
-    for(int i = 0; i < thread_count; i++){
-        thread_data[i].thread_id = i;
-        thread_data[i].operations = operations;
-        thread_data[i].m = m;
-        pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+    for (int i = 0; i < repetitions; i++) {
+        clock_t start = clock();
+        
+        /*create the threads*/
+        for(int i = 0; i < thread_count; i++){
+            thread_data[i].thread_id = i;
+            thread_data[i].operations = operations;
+            thread_data[i].m = m;
+            pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+        }
+
+        /*join the threads*/
+        for(int i = 0; i < thread_count; i++){
+            pthread_join(thread_list[i], NULL);
+        }
+
+
+        clock_t end = clock();
+        execution_times[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
     }
 
-    /*join the threads*/
-    for(int i = 0; i < thread_count; i++){
-        pthread_join(thread_list[i], NULL);
-    }
-
-    printf("Final Linked List:\n");
-    printLinkedList();
+    // printf("Final Linked List:\n");
+    // printLinkedList();
 
     /*free the memory*/
     free(thread_list);
@@ -117,6 +125,18 @@ int main(int argc, char* arg[]){
 
     /*destroy the mutex*/
     pthread_mutex_destroy(&mutex);
+
+    mean = calculate_mean(execution_times, repetitions);   /*calculate the mean of the ran 100 execution*/
+    stddev = calculate_standard_deviation(execution_times, repetitions, mean);   /*calculate standard deviation of the samples*/
+    
+    double z = 1.960; // 95% confidence level
+    double error = 0.05 * mean; // desired accuracy in seconds
+    
+    required_samples = calculate_required_samples(stddev, mean, z, error);   /*calculate the required samples to get the desired confidence accuracy*/
+    
+    printf("Mean execution time: %f seconds\n", mean);
+    printf("Standard deviation: %f seconds\n", stddev);
+    printf("Required number of samples: %f\n", required_samples);
 
     return 0;
 
@@ -252,4 +272,24 @@ void delete(int value) {
 
     pthread_mutex_unlock(&mutex);
 
+}
+
+double calculate_mean(double* values, int size) {
+    double sum = 0.0;
+    for (int i = 0; i < size; i++) {
+        sum += values[i];
+    }
+    return sum / size;
+}
+
+double calculate_standard_deviation(double* values, int size, double mean) {
+    double sum = 0.0;
+    for (int i = 0; i < size; i++) {
+        sum += pow(values[i] - mean, 2);
+    }
+    return sqrt(sum / size);
+}
+
+double calculate_required_samples(double stddev, double mean, double z, double error) {
+    return pow((z * stddev) / error, 2);
 }
