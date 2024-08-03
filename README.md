@@ -48,5 +48,5 @@ gcc -o linkedListWithRandWLock linkedListWithRandWLock.c -lpthread -lm
 ```
 * to run
 ```
-linkedListWithRandWLock 4 1000 1000 0.5 0.3 0.2
+linkedListWithRandWLock 4 1000 10000 0.99 0.005 0.005
 ```
