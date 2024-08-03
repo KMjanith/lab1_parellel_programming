@@ -60,7 +60,7 @@ int main(int argc, char* arg[]){
     m_insert = strtof(arg[5], NULL); /*number of insert operations*/
     m_delete = strtof(arg[6], NULL); /*number of delete operations*/
 
-    int repetitions = 100; // initial number of repetitions
+    int repetitions = 50; // initial number of repetitions
     double execution_times[repetitions];  /*list ti store the execution times*/
     double total_time, mean, stddev, required_samples;   /*variables to calculate the stats*/
 
@@ -133,7 +133,7 @@ int main(int argc, char* arg[]){
 
     double realExecutionTimes[(int)required_samples];
 
-    for(int i = 0; i < required_samples; i++){
+    for(int i = 0; i < (int)required_samples; i++){
         clock_t start = clock();
         
         /*create the threads*/
@@ -154,9 +154,9 @@ int main(int argc, char* arg[]){
 
     }
 
-    mean = calculate_mean(realExecutionTimes, required_samples);   /*calculate the mean of the ran 100 execution*/
-    stddev = calculate_standard_deviation(realExecutionTimes, required_samples, mean);   /*calculate standard deviation of the samples*/
-    printf("Mean execution time: %f seconds, std: %f for samples: %d", mean,stddev, (int)required_samples);
+    mean = calculate_mean(realExecutionTimes, (int)required_samples);   /*calculate the mean of the ran 100 execution*/
+    stddev = calculate_standard_deviation(realExecutionTimes, (int)required_samples, mean);   /*calculate standard deviation of the samples*/
+    printf("Mean execution time: %f seconds, std: %f for samples: %d ", mean,stddev, (int)required_samples);
     
 
     /*free the memory*/
@@ -231,17 +231,22 @@ void *threadOperation(void* thread_data){
     for(int i = start; i<end;i++){
         int random_value = rand() % MAX_VALUE;
         if(operations[i] == 'M'){
+            pthread_mutex_lock(&mutex);
             member(random_value);
+            pthread_mutex_unlock(&mutex);
         }else if(operations[i] == 'I'){
+            pthread_mutex_lock(&mutex);
             insert(random_value);
+            pthread_mutex_unlock(&mutex);
         }else{
+            pthread_mutex_lock(&mutex);
             delete(random_value);
+            pthread_mutex_unlock(&mutex);
         }
     }
 }
 
 int member(int value) {
-    
     struct Node* current = head;
     
     while (current != NULL) {
@@ -257,25 +262,21 @@ int member(int value) {
 void insert(int value){
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
     struct Node* new_node = malloc(sizeof(struct Node));
-    pthread_mutex_lock(&mutex);
+    
     new_node->data = value;
     new_node->next = head;
     head = new_node;
-    pthread_mutex_unlock(&mutex);
+    
 }
 
 void delete(int value) {
     struct Node* current = head;
-    pthread_mutex_lock(&mutex);
     if (current == NULL) { // Empty list
-        pthread_mutex_unlock(&mutex);
         return;
     }
-
     if (current->data == value) { // Delete the head
         head = current->next;
         free(current);
-        pthread_mutex_unlock(&mutex);
         return;
     }
     struct Node* previous = current;
@@ -287,16 +288,11 @@ void delete(int value) {
     }
 
     // If the node is not found
-    if (current == NULL) {  
-        pthread_mutex_unlock(&mutex);
+    if (current == NULL) { 
         return;
     }
-
     previous->next = current->next;  // Delete the node
     free(current);
-
-    pthread_mutex_unlock(&mutex);
-
 }
 
 double calculate_mean(double* values, int size) {
