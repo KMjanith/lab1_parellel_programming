@@ -23,6 +23,9 @@ gcc -o fileName <fileName.c> -lpthread
 
 # sample codes for compilation and run the program
 ## for(n=1000,m=10000,member_fraction=0.99,insert_fraction=0.005,delete_fraction=0.005)
+
+## IN Windows 
+
 ### Serial linkedlist
 * for compile
 ```
@@ -44,9 +47,38 @@ mutexLinkedList 4 1000 10000 0.99 0.005 0.005
 ### Linked List with RW lock
 * for compile
 ```
-gcc -o linkedListWithRandWLock linkedListWithRandWLock_rw_node.c -lpthread
+gcc -o linkedListWithRandWLock linkedListWithRandWLock.c -lpthread
 ```
 * to run
 ```
 linkedListWithRandWLock 4 1000 10000 0.99 0.005 0.005
+
 ```
+## IN Linux
+
+### Serial linkedlist
+* for compile
+```
+gcc -o serial SerialLinkedList.c -lpthread -lm
+```
+* to run
+```
+./serial 1 1000 10000 0.99 0.005 0.005
+```
+### Linked List with Mutex
+* for compile
+```
+gcc -o mutexLinkedList linkedListWithMutex.c -lpthread -lm
+```
+* to run
+```
+./mutexLinkedList 4 1000 10000 0.99 0.005 0.005
+```
+### Linked List with RW lock
+* for compile
+```
+gcc -o linkedListWithRandWLock linkedListWithRandWLock.c -lpthread -lm
+```
+* to run
+```
+./linkedListWithRandWLock 4 1000 10000 0.99 0.005 0.005
