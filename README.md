@@ -44,7 +44,7 @@ mutexLinkedList 4 1000 10000 0.99 0.005 0.005
 ### Linked List with RW lock
 * for compile
 ```
-gcc -o linkedListWithRandWLock linkedListWithRandWLock.c -lpthread -lm
+gcc -o linkedListWithRandWLock linkedListWithRandWLock_rw_node.c -lpthread
 ```
 * to run
 ```
