@@ -1,3 +1,7 @@
 *.exe
 *.bin
 .vscode/
+
+linkedListWithRandWLock
+mutexLinkedList
+serial
