@@ -20,6 +20,7 @@ struct ThreadData{
 
 void generate_unique_values(int* values, int n);
 void createInitialLinkedList(int* values, int n);
+struct Node* deleteList();
 void createOperationList(char* operations,int m, float m_insert,float m_delete,float m_member);
 void shuffleOperations(char* operations, int m);
 void *threadOperation(void* thread_data);
@@ -38,15 +39,20 @@ int m; /*number of operations to perform*/
 float m_insert;
 float m_delete;
 float m_member;
+bool used[MAX_VALUE] = {false}; /*array to store the used values*/
+int total_operations = 0;
 
 void printLinkedList() {
+    int count = 0;
     struct Node* current = head;
-    printf("Linked List: ");
+    //printf("Linked List: ");
     while (current != NULL) {
-        printf("%d -> ", current->data);
+        //printf("%d -> ", current->data);
         current = current->next;
+        count++;
     }
-    printf("NULL\n");
+    //printf("NULL\n");
+    printf("Number of nodes: %d\n", count);
 }
 
 int main(int argc, char* arg[]){
@@ -60,7 +66,7 @@ int main(int argc, char* arg[]){
     m_insert = strtof(arg[5], NULL); /*number of insert operations*/
     m_delete = strtof(arg[6], NULL); /*number of delete operations*/
 
-    int repetitions = 50; // initial number of repetitions
+    int repetitions = 100; // initial number of repetitions
     double execution_times[repetitions];  /*list ti store the execution times*/
     double total_time, mean, stddev, required_samples;   /*variables to calculate the stats*/
 
@@ -97,27 +103,64 @@ int main(int argc, char* arg[]){
     printf("Running the programme with %d threads and %d times to calculate sample size...\n\n", thread_count, repetitions);
 
     for (int i = 0; i < repetitions; i++) {
-        clock_t start = clock();
+        if(i>0){
+            /*delete linked list created for sample count*/
+            head =  deleteList(head);
+
+            /*creating initial linked list*/
+            createInitialLinkedList(unique_values,n);
+
+            clock_t start = clock();
         
-        /*create the threads*/
-        for(int i = 0; i < thread_count; i++){
-            thread_data[i].thread_id = i;
-            thread_data[i].operations = operations;
-            thread_data[i].m = m;
-            pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+            /*create the threads*/
+            for(int i = 0; i < thread_count; i++){
+                thread_data[i].thread_id = i;
+                thread_data[i].operations = operations;
+                thread_data[i].m = m;
+                pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+            }
+
+            /*join the threads*/
+            for(int i = 0; i < thread_count; i++){
+                pthread_join(thread_list[i], NULL);
+            }
+
+
+            clock_t end = clock();
+            execution_times[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
+        }else{
+            clock_t start = clock();
+        
+            /*create the threads*/
+            for(int i = 0; i < thread_count; i++){
+                thread_data[i].thread_id = i;
+                thread_data[i].operations = operations;
+                thread_data[i].m = m;
+                pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+            }
+
+            /*join the threads*/
+            for(int i = 0; i < thread_count; i++){
+                pthread_join(thread_list[i], NULL);
+            }
+
+
+            clock_t end = clock();
+            execution_times[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
         }
-
-        /*join the threads*/
-        for(int i = 0; i < thread_count; i++){
-            pthread_join(thread_list[i], NULL);
-        }
-
-
-        clock_t end = clock();
-        execution_times[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
+        
     }
 
-    // printf("Final Linked List:\n");
+    // printf("After 100 Linked List:\n");
+    // printLinkedList();
+
+    /*delete linked list created for sample count*/
+    head =  deleteList(head);
+
+    /*creating initial linked list*/
+    createInitialLinkedList(unique_values,n);
+
+    // printf("second Final Linked List:\n");
     // printLinkedList();
 
     mean = calculate_mean(execution_times, repetitions);   /*calculate the mean of the ran 100 execution*/
@@ -134,29 +177,57 @@ int main(int argc, char* arg[]){
     double realExecutionTimes[(int)required_samples];
 
     for(int i = 0; i < (int)required_samples; i++){
-        clock_t start = clock();
         
-        /*create the threads*/
-        for(int i = 0; i < thread_count; i++){
-            thread_data[i].thread_id = i;
-            thread_data[i].operations = operations;
-            thread_data[i].m = m;
-            pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+
+        if(i>0){
+            /*delete linked list created for sample count*/
+            head =  deleteList(head);
+
+            /*creating initial linked list*/
+            createInitialLinkedList(unique_values,n);
+
+            clock_t start = clock();
+        
+            /*create the threads*/
+            for(int i = 0; i < thread_count; i++){
+                thread_data[i].thread_id = i;
+                thread_data[i].operations = operations;
+                thread_data[i].m = m;
+                pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+            }
+
+            /*join the threads*/
+            for(int i = 0; i < thread_count; i++){
+                pthread_join(thread_list[i], NULL);
+            }
+
+            clock_t end = clock();
+            realExecutionTimes[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
+        }else{
+            clock_t start = clock();
+        
+            /*create the threads*/
+            for(int i = 0; i < thread_count; i++){
+                thread_data[i].thread_id = i;
+                thread_data[i].operations = operations;
+                thread_data[i].m = m;
+                pthread_create(&thread_list[i], NULL, threadOperation, (void*) &thread_data[i]);
+            }
+
+            /*join the threads*/
+            for(int i = 0; i < thread_count; i++){
+                pthread_join(thread_list[i], NULL);
+            }
+
+            clock_t end = clock();
+            realExecutionTimes[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
         }
-
-        /*join the threads*/
-        for(int i = 0; i < thread_count; i++){
-            pthread_join(thread_list[i], NULL);
-        }
-
-        clock_t end = clock();
-        realExecutionTimes[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
-
+        
     }
 
     mean = calculate_mean(realExecutionTimes, (int)required_samples);   /*calculate the mean of the ran 100 execution*/
     stddev = calculate_standard_deviation(realExecutionTimes, (int)required_samples, mean);   /*calculate standard deviation of the samples*/
-    printf("Mean execution time: %f seconds, std: %f for samples: %d ", mean,stddev, (int)required_samples);
+    printf("Mean execution time: %f seconds, std: %f for samples: %d , total_operations: %d", mean,stddev, (int)required_samples, total_operations);
     
 
     /*free the memory*/
@@ -173,7 +244,7 @@ int main(int argc, char* arg[]){
 }
 
 void generate_unique_values(int* values, int n) {
-    bool used[MAX_VALUE] = {false};
+    
     int count = 0;
     
     while (count < n) {
@@ -192,6 +263,18 @@ void createInitialLinkedList(int* values, int n){
         new_node->next = head;
         head = new_node;
     }
+}
+
+struct Node* deleteList(){
+    struct Node* current = head;
+    struct Node* next;
+    while(current != NULL){
+        next = current->next;
+        free(current);
+        current = next;
+    }
+    struct Node* head = NULL;
+    return head;
 }
 
 void createOperationList(char* operations,int m, float m_insert,float m_delete,float m_member){
@@ -247,6 +330,8 @@ void *threadOperation(void* thread_data){
 }
 
 int member(int value) {
+    total_operations++;
+    //printf("Member: %d\n", value);
     struct Node* current = head;
     
     while (current != NULL) {
@@ -260,16 +345,24 @@ int member(int value) {
 }
 
 void insert(int value){
+    total_operations++;
+    //printf("Insert: %d\n", value);
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
     struct Node* new_node = malloc(sizeof(struct Node));
-    
-    new_node->data = value;
-    new_node->next = head;
-    head = new_node;
+    if(used[value]){
+        return;
+    }else{
+        new_node->data = value;
+        new_node->next = head;
+        head = new_node;
+    }
+
     
 }
 
 void delete(int value) {
+    total_operations++;
+    //printf("Delete: %d\n", value);
     struct Node* current = head;
     if (current == NULL) { // Empty list
         return;
