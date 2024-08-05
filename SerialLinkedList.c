@@ -5,6 +5,7 @@
 #include <math.h>
 
 #define MAX_VALUE 65536  // Range of random values
+#define REPETITIONS 100  // Number of repetitions
 
 struct Node {
     int data;
@@ -14,6 +15,7 @@ struct Node {
 void generate_unique_values(int* values, int n);
 void createInitialLinkedList(int* values, int n);
 void createOperationList(char* operations, int m, float m_insert, float m_delete, float m_member);
+struct Node* deleteList();
 void shuffleOperations(char* operations, int m);
 int member(int value);
 void insert(int value);
@@ -54,8 +56,8 @@ int main(int argc, char* arg[]) {
     m_insert = strtof(arg[5], NULL); /* Number of insert operations */
     m_delete = strtof(arg[6], NULL); /* Number of delete operations */
 
-    int repetitions = 100; // Initial number of repetitions
-    double* execution_times = malloc(repetitions * sizeof(double));  /* Store the execution times */
+    //int repetitions = 100; // Initial number of repetitions
+    double* execution_times = malloc(REPETITIONS * sizeof(double));  /* Store the execution times */
     if (execution_times == NULL) {
         perror("Failed to allocate memory for execution times");
         return 1;
@@ -88,9 +90,13 @@ int main(int argc, char* arg[]) {
     /* Shuffling the operations */
     shuffleOperations(operations, m);
 
-    printf("Running the program with %d threads and %d times to calculate sample size...\n\n", thread_count, repetitions);
+    printf("Running the program with %d threads and %d times to calculate sample size...\n\n", thread_count, REPETITIONS);
 
-    for (int i = 0; i < repetitions; i++) {
+    for (int i = 0; i < REPETITIONS; i++) {
+        if(i > 0 ){
+            head = deleteList();
+            createInitialLinkedList(unique_values, n);
+        }
         clock_t start = clock();
         
         for (int j = 0; j < m; j++) {
@@ -112,8 +118,8 @@ int main(int argc, char* arg[]) {
         execution_times[i] = ((double)(end - start)) / CLOCKS_PER_SEC;
     }
 
-    mean = calculate_mean(execution_times, repetitions);   /* Calculate the mean of the 100 executions */
-    stddev = calculate_standard_deviation(execution_times, repetitions, mean);   /* Calculate standard deviation of the samples */
+    mean = calculate_mean(execution_times, REPETITIONS);   /* Calculate the mean of the 100 executions */
+    stddev = calculate_standard_deviation(execution_times, REPETITIONS, mean);   /* Calculate standard deviation of the samples */
     
     double z = 1.960; // 95% confidence level
     double error = 0.05 * mean; // Desired accuracy in seconds
@@ -133,8 +139,11 @@ int main(int argc, char* arg[]) {
     }
    
     for (int i = 0; i < (int)required_samples; i++) {
+        if(i > 0 ){
+            head = deleteList();
+            createInitialLinkedList(unique_values, n);
+        }
         clock_t start = clock();
-        printf("Current execution: %d\n", i);
         
         for (int j = 0; j < m; j++) {
             int value = rand() % MAX_VALUE;
@@ -183,15 +192,20 @@ void generate_unique_values(int* values, int n) {
 
 void createInitialLinkedList(int* values, int n) {
     for(int i = 0; i < n; i++) {
-        struct Node* new_node = malloc(sizeof(struct Node));
-        if (new_node == NULL) {
-            perror("Failed to allocate memory for new node");
-            exit(EXIT_FAILURE);
-        }
-        new_node->data = values[i];
-        new_node->next = head;
-        head = new_node;
+        insert(values[i]);
     }
+}
+
+struct Node* deleteList(){
+    struct Node* current = head;
+    struct Node* next;
+    while(current != NULL){
+        next = current->next;
+        free(current);
+        current = next;
+    }
+    struct Node* head = NULL;
+    return head;
 }
 
 void createOperationList(char* operations, int m, float m_insert, float m_delete, float m_member) {
@@ -221,26 +235,42 @@ void shuffleOperations(char* operations, int m) {
 
 int member(int value) {
     struct Node* current = head;
-
-    while (current != NULL) {
-        if (current->data == value) {
-            return 1; // Value found
-        }
+    
+    while (current != NULL && current->data < value) {
         current = current->next;
     }
-
-    return 0; // Value not found
-}
+    if (current == NULL || current->data > value) {
+        return 0;
+    }else{
+        return 1;
+    }
+ 
+    return 0; /*value not found*/
+    }
 
 void insert(int value) {
     struct Node* new_node = malloc(sizeof(struct Node));
-    if (new_node == NULL) {
+    if (!new_node) {
         perror("Failed to allocate memory for new node");
-        exit(EXIT_FAILURE);
+        return;
     }
     new_node->data = value;
-    new_node->next = head;
-    head = new_node;
+    new_node->next = NULL;
+
+    struct Node* current_node = head;
+    struct Node* previous_node = NULL;
+
+    while (current_node != NULL && current_node->data < value) {
+        previous_node = current_node;
+        current_node = current_node->next;
+    }
+    if (previous_node == NULL) {
+        new_node->next = head;
+        head = new_node;
+    } else {
+        new_node->next = current_node;
+        previous_node->next = new_node;
+    }
 }
 
 void delete(int value) {

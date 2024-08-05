@@ -255,10 +255,10 @@ int main(int argc, char *argv[]) {
     float m_insert_fraction = atof(argv[6]); // fraction of insert operations 
 
     // Validate input fractions
-    if ((int)(m_member_fraction + m_delete_fraction + m_insert_fraction) != 1) {
-        fprintf(stderr, "Fractions must sum to 1.0\n");
-        return EXIT_FAILURE;
-    }
+    // if ((int)(m_member_fraction + m_delete_fraction + m_insert_fraction) != 1) {
+    //     fprintf(stderr, "Fractions must sum to 1.0\n");
+    //     return EXIT_FAILURE;
+    // }
 
     srand(time(NULL)); 
 
