@@ -348,13 +348,28 @@ void insert(int value){
     total_operations++;
     //printf("Insert: %d\n", value);
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
+ 
     struct Node* new_node = malloc(sizeof(struct Node));
-    if(used[value]){
+    if (!new_node) {
+        perror("Failed to allocate memory for new node");
         return;
-    }else{
-        new_node->data = value;
+    }
+    new_node->data = value;
+    new_node->next = NULL;
+
+    struct Node* current_node = head;
+    struct Node* previous_node = NULL;
+
+    while (current_node != NULL && current_node->data < value) {
+        previous_node = current_node;
+        current_node = current_node->next;
+    }
+    if (previous_node == NULL) {
         new_node->next = head;
         head = new_node;
+    } else {
+        new_node->next = current_node;
+        previous_node->next = new_node;
     }
 
     
