@@ -293,14 +293,12 @@ int member(int value) {
 void insert(int value){
     //printf("Insert: %d\n", value);
     /*here for the simplicity of the execution we insert the nodes to the head of the linked list*/
-    if(used[value]){
-        return;
-    }
     struct Node* new_node = malloc(sizeof(struct Node));
     if (!new_node) {
         perror("Failed to allocate memory for new node");
         return;
     }
+
     new_node->data = value;
     new_node->next = NULL;
 
