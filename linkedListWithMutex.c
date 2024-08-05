@@ -70,6 +70,7 @@ int main(int argc, char* arg[]){
     double execution_times[repetitions];  /*list ti store the execution times*/
     double total_time, mean, stddev, required_samples;   /*variables to calculate the stats*/
 
+    srand(time(NULL)); 
     
     /*generate unique values*/
     int* unique_values = malloc(n * sizeof(int));
