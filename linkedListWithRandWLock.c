@@ -237,7 +237,6 @@ void createOperationList(char* operations,int m, float m_insert,float m_delete,f
     for(int i = insert + delete; i < insert + delete + member; i++){
         operations[i] = 'M';
     }
-    
 }
 
 void shuffleOperations(char* operations, int m){
