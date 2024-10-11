@@ -1,6 +1,9 @@
 *.exe
 *.bin
 .vscode/
+*.xlsx
+*.bat
+*.sh
 
 .fuse_hidden000001cb00000003
 .fuse_hidden000001e600000004
