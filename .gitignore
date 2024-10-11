@@ -4,10 +4,29 @@
 *.xlsx
 *.bat
 *.sh
+*.log
+*.log.*
+*.log-*
+*.log/*
+
+
+# Compiled object files
+*.o
+*.obj
+
+# Compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled static libraries
+*.a
+*.lib
+
+# Compiled executables
+*.exe
+*.out
+*.app
 
 .fuse_hidden000001cb00000003
 .fuse_hidden000001e600000004
-
-serial
-mutex
-readwrite
