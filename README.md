@@ -21,64 +21,21 @@ gcc -o fileName <fileName.c> -lpthread
 * then collected the mean, standard deviation and the sample size
 * then ran the m operations equals to that sample size and collected the data and calculated the mean and the standard deviation for specific thread counts.
 
-# sample codes for compilation and run the program
-## for(n=1000,m=10000,member_fraction=0.99,insert_fraction=0.005,delete_fraction=0.005)
+# running codes and get the output
+## windows
+1. open a terminal and navigate to the project folder. 
+2. run the .bat file.
+```
+run.bat
+```
+3. You can see a text file named `results.txt`. it containes all the results
 
-## IN Windows 
+## for lynux
+1. open a terminal and navigate to the project folder. 
+2. run the .sh file.
+```
+./run.sh
+```
+3. You can see a text file named `results.txt`. it containes all the results
 
-### Serial linkedlist
-* for compile
-```
-gcc -o serial SerialLinkedList.c -lpthread
-```
-* to run
-```
-serial 1 1000 10000 0.99 0.005 0.005
-```
-### Linked List with Mutex
-* for compile
-```
-gcc -o mutexLinkedList linkedListWithMutex.c -lpthread
-```
-* to run
-```
-mutexLinkedList 4 1000 10000 0.99 0.005 0.005
-```
-### Linked List with RW lock
-* for compile
-```
-gcc -o linkedListWithRandWLock linkedListWithRandWLock.c -lpthread
-```
-* to run
-```
-linkedListWithRandWLock 4 1000 10000 0.99 0.005 0.005
 
-```
-## IN Linux
-
-### Serial linkedlist
-* for compile
-```
-gcc -o serial SerialLinkedList.c -lpthread -lm
-```
-* to run
-```
-./serial 1 1000 10000 0.99 0.005 0.005
-```
-### Linked List with Mutex
-* for compile
-```
-gcc -o mutexLinkedList linkedListWithMutex.c -lpthread -lm
-```
-* to run
-```
-./mutexLinkedList 4 1000 10000 0.99 0.005 0.005
-```
-### Linked List with RW lock
-* for compile
-```
-gcc -o linkedListWithRandWLock linkedListWithRandWLock.c -lpthread -lm
-```
-* to run
-```
-./linkedListWithRandWLock 4 1000 10000 0.99 0.005 0.005

@@ -97,7 +97,6 @@ int main(int argc, char* arg[]){
         exit(EXIT_FAILURE);
     }
 
-    printf("Running the programme with %d threads and %d times to calculate sample size...\n\n", thread_count, REPETITIONS);
 
     for (int i = 0; i < REPETITIONS; i++) {
         if(i>0){
@@ -141,9 +140,6 @@ int main(int argc, char* arg[]){
     double error = 0.05 * mean; // desired accuracy in seconds
     
     required_samples = calculate_required_samples(stddev, mean, z, error);   /*calculate the required samples to get the desired confidence accuracy*/
-    
-    printf("Required number of samples: %f\n", required_samples);
-    printf("runnning the programme with the required number of samples...\n\n");
 
     double realExecutionTimes[(int)required_samples];
 
@@ -177,7 +173,7 @@ int main(int argc, char* arg[]){
 
     mean = calculate_mean(realExecutionTimes, (int)required_samples);   /*calculate the mean of the ran 100 execution*/
     stddev = calculate_standard_deviation(realExecutionTimes, (int)required_samples, mean);   /*calculate standard deviation of the samples*/
-    printf("Mean execution time: %f seconds, std: %f for samples: %d ", mean,stddev, (int)required_samples);
+    printf("Mean execution time: %f std: %f samples: %d \n\n", mean,stddev, (int)required_samples);
     
 
     /*free the memory*/

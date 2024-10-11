@@ -90,8 +90,6 @@ int main(int argc, char* arg[]) {
     /* Shuffling the operations */
     shuffleOperations(operations, m);
 
-    printf("Running the program with %d threads and %d times to calculate sample size...\n\n", thread_count, REPETITIONS);
-
     for (int i = 0; i < REPETITIONS; i++) {
         if(i > 0 ){
             head = deleteList();
@@ -126,8 +124,6 @@ int main(int argc, char* arg[]) {
     
     required_samples = calculate_required_samples(stddev, mean, z, error);   /* Calculate the required samples for desired confidence accuracy */
     
-    printf("Required number of samples: %f\n", required_samples);
-    printf("Running the program with the required number of samples: %d\n\n", (int)required_samples);
 
     double* realExecutionTimes = malloc((int)required_samples * sizeof(double));
     if (realExecutionTimes == NULL) {
@@ -166,7 +162,7 @@ int main(int argc, char* arg[]) {
 
     mean = calculate_mean(realExecutionTimes, (int)required_samples);   /* Calculate the mean of the executions */
     stddev = calculate_standard_deviation(realExecutionTimes, (int)required_samples, mean);   /* Calculate standard deviation of the samples */
-    printf("Mean execution time: %f seconds, std: %f for samples: %d\n", mean, stddev, (int)required_samples);
+    printf("Mean execution time: %f std: %f samples: %d\n\n", mean, stddev, (int)required_samples);
     
     /* Free the memory */
     free(execution_times);
